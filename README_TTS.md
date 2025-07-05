@@ -8,7 +8,7 @@ The tool automatically cleans markdown content to remove all the techy bits that
 
 ## 🎥 See It In Action
 
-![Demo Video](./Read%20Docs%20Demo.mov)
+![Demo Video](https://x.com/VectorQl/status/1941400473552183762)
 
 *Watch the magic happen - from boring markdown to beautiful audio!*
 
