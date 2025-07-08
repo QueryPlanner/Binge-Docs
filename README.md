@@ -17,32 +17,32 @@ The tool automatically cleans markdown content to remove all the techy bits that
 ## 📁 The Cast & Crew
 
 - `md_to_speech.py` - The star of the show! Python script that handles markdown cleaning and TTS conversion
-- `convert_md_to_speech.sh` - Your friendly shell script wrapper for easy one-liner magic
+- `.sh` - Your friendly shell script wrapper for easy one-liner magic
 
 ## 🚀 Ready to Binge?
 
 ### Quick Start (Because who has time to read?)
 ```bash
 # Convert any markdown file (we'll name it for you!)
-./convert_md_to_speech.sh path/to/file.md
+./.sh path/to/file.md
 
 # Want to name your masterpiece?
-./convert_md_to_speech.sh path/to/file.md my_awesome_podcast.wav
+./.sh path/to/file.md my_awesome_podcast.wav
 
 # Feeling fancy with different voices?
-./convert_md_to_speech.sh path/to/file.md output_audio.wav af_sky en
+./.sh path/to/file.md output_audio.wav af_sky en
 ```
 
 ### Real Examples (From the wild!)
 ```bash
 # Turn FastAPI docs into your commute companion
-./convert_md_to_speech.sh fastapi/docs/en/docs/tutorial/path-params-numeric-validations.md
+./.sh fastapi/docs/en/docs/tutorial/path-params-numeric-validations.md
 
 # Create your own tutorial series
-./convert_md_to_speech.sh fastapi/docs/en/docs/tutorial/path-params-numeric-validations.md tutorial.wav
+./.sh fastapi/docs/en/docs/tutorial/path-params-numeric-validations.md tutorial.wav
 
 # Switch up the voice for variety
-./convert_md_to_speech.sh docs/tutorial.md tutorial.wav af_bella a
+./.sh docs/tutorial.md tutorial.wav af_bella a
 ```
 
 ### 🎛️ Command Line Options (Your controls)

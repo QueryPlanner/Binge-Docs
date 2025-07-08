@@ -2,7 +2,7 @@
 import re
 import sys
 import os
-from kokoro import KPipeline
+from kokoro_onnx import Kokoro
 import soundfile as sf
 import numpy as np
 
@@ -59,6 +59,33 @@ def clean_markdown(text):
     
     return text.strip()
 
+def chunk_text(text, max_length=1000):
+    """Split text into smaller chunks for TTS processing."""
+    sentences = text.replace('\n', ' ').split('.')
+    chunks = []
+    current_chunk = []
+    current_length = 0
+    
+    for sentence in sentences:
+        sentence = sentence.strip()
+        if not sentence:
+            continue
+            
+        sentence_length = len(sentence)
+        
+        if current_length + sentence_length > max_length and current_chunk:
+            chunks.append('. '.join(current_chunk) + '.')
+            current_chunk = [sentence]
+            current_length = sentence_length
+        else:
+            current_chunk.append(sentence)
+            current_length += sentence_length
+    
+    if current_chunk:
+        chunks.append('. '.join(current_chunk) + '.')
+    
+    return chunks
+
 def markdown_to_speech(file_path, output_path=None, voice='af_heart', lang_code='a'):
     """
     Convert a markdown file to speech.
@@ -67,7 +94,7 @@ def markdown_to_speech(file_path, output_path=None, voice='af_heart', lang_code=
         file_path: Path to the markdown file
         output_path: Output audio file path (optional)
         voice: Voice to use for TTS
-        lang_code: Language code for TTS
+        lang_code: Language code for TTS (not used in kokoro-onnx)
     """
     # Read the markdown file
     try:
@@ -93,25 +120,45 @@ def markdown_to_speech(file_path, output_path=None, voice='af_heart', lang_code=
     print(cleaned_text[:200] + "..." if len(cleaned_text) > 200 else cleaned_text)
     print("\n" + "="*50)
     
-    # Initialize the TTS pipeline
+    # Initialize the TTS model
     try:
-        pipeline = KPipeline(lang_code=lang_code)
+        # Look for model files in kokoro-tts directory
+        script_dir = os.path.dirname(os.path.abspath(__file__))
+        kokoro_dir = os.path.join(script_dir, 'kokoro-tts')
+        model_path = os.path.join(kokoro_dir, 'kokoro-v1.0.onnx')
+        voices_path = os.path.join(kokoro_dir, 'voices-v1.0.bin')
+        
+        if not os.path.exists(model_path):
+            print(f"Error: Model file not found at {model_path}")
+            return False
+        if not os.path.exists(voices_path):
+            print(f"Error: Voices file not found at {voices_path}")
+            return False
+            
+        kokoro = Kokoro(model_path, voices_path)
+        print(f"Initialized Kokoro TTS with voice: {voice}")
+        
     except Exception as e:
-        print(f"Error initializing TTS pipeline: {e}")
+        print(f"Error initializing TTS model: {e}")
         return False
     
     # Generate speech
     try:
-        generator = pipeline(cleaned_text, voice=voice)
+        # Split text into chunks for better processing
+        chunks = chunk_text(cleaned_text, max_length=800)
+        print(f"Processing {len(chunks)} text chunks...")
         
-        # Collect all audio chunks
         audio_chunks = []
-        chunk_count = 0
         
-        for i, (gs, ps, audio) in enumerate(generator):
-            print(f"Processing chunk {i}: {gs}, {ps}")
-            audio_chunks.append(audio)
-            chunk_count += 1
+        for i, chunk in enumerate(chunks):
+            print(f"Processing chunk {i+1}/{len(chunks)}")
+            try:
+                # Generate audio for this chunk
+                audio = kokoro.create(chunk, voice=voice, speed=1.0)
+                audio_chunks.append(audio)
+            except Exception as e:
+                print(f"Error processing chunk {i+1}: {e}")
+                continue
         
         if not audio_chunks:
             print("No audio chunks generated")
@@ -128,7 +175,7 @@ def markdown_to_speech(file_path, output_path=None, voice='af_heart', lang_code=
         # Save the audio file
         sf.write(output_path, full_audio, 24000)
         print(f"\nGenerated audio file: {output_path}")
-        print(f"Total chunks processed: {chunk_count}")
+        print(f"Total chunks processed: {len(audio_chunks)}")
         print(f"Audio duration: {len(full_audio) / 24000:.2f} seconds")
         return True
         
